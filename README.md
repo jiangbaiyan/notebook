@@ -15,3 +15,4 @@
  - 【PHP源码学习】[2019-03-27 pass_two函数详解笔记](https://segmentfault.com/a/1190000019251039)
  - 【PHP源码学习】[2019-03-28 Zend虚拟机](https://segmentfault.com/a/1190000019382316)
  - 【PHP源码学习】[2019-04-01 PHP垃圾回收1](https://segmentfault.com/a/1190000019400319)
+ - 【PHP源码学习】[2019-04-02 PHP垃圾回收2](https://segmentfault.com/a/1190000019650733)
