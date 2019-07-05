@@ -16,3 +16,4 @@
  - 【PHP源码学习】[2019-03-28 Zend虚拟机](https://segmentfault.com/a/1190000019382316)
  - 【PHP源码学习】[2019-04-01 PHP垃圾回收1](https://segmentfault.com/a/1190000019400319)
  - 【PHP源码学习】[2019-04-02 PHP垃圾回收2](https://segmentfault.com/a/1190000019650733)
+ - 【PHP源码学习】[2019-04-03 PHP类与对象](https://segmentfault.com/a/1190000019674293)
