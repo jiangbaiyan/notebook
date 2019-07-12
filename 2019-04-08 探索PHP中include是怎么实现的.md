@@ -26,6 +26,10 @@ do{
  - 第三个JMPNZ对应do-while循环体，注意这个箭头指向$a = 0对应的ASSIGN指令，代表每次循环都要重新执行一次$a = -这个ASSIGN指令
  - 第四个RETURN对应PHP虚拟机自动给脚本添加的返回值
 ## include语句的实现
+ - 我们在面试中经常会被问到如下知识点:
+     - include和require有什么区别？
+     - include和include_once有什么区别（require同理）
+ - 以上两道题的答案相信大家都知道，第一个问题如果文件不存在，include会情况下会发出警告而require会报fatal error并终止脚本运行；而第二个问题中的include_once带有缓存，如果之前加载过这个文件直接调用缓存中的文件，不会去二次加载文件，include_once的性能更好。
  - 我们首先看一个例子：
  - 1.php：
 ```php 
@@ -68,16 +72,60 @@ static zend_never_inline zend_op_array* ZEND_FASTCALL zend_include_or_eval(zval 
 	...
 	} else {
 		switch (type) {
-			...
-			case ZEND_INCLUDE: //include语句
-			case ZEND_REQUIRE: //require语句
-				new_op_array = compile_filename(type, inc_filename); //核心调用
+{
+			case ZEND_INCLUDE_ONCE:
+			case ZEND_REQUIRE_ONCE: { //此处带有缓存
+					zend_file_handle file_handle;
+					zend_string *resolved_path;
+
+					resolved_path = zend_resolve_path(Z_STRVAL_P(inc_filename), (int)Z_STRLEN_P(inc_filename));
+					if (resolved_path) {
+						if (zend_hash_exists(&EG(included_files), resolved_path)) {
+							goto already_compiled;
+						}
+					} else {
+						resolved_path = zend_string_copy(Z_STR_P(inc_filename));
+					}
+
+					if (SUCCESS == zend_stream_open(ZSTR_VAL(resolved_path), &file_handle)) {
+
+						if (!file_handle.opened_path) {
+							file_handle.opened_path = zend_string_copy(resolved_path);
+						}
+
+						if (zend_hash_add_empty_element(&EG(included_files), file_handle.opened_path)) { //加入缓存的哈希表中
+							zend_op_array *op_array = zend_compile_file(&file_handle, (type==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE));
+							zend_destroy_file_handle(&file_handle);
+							zend_string_release(resolved_path);
+							if (Z_TYPE(tmp_inc_filename) != IS_UNDEF) {
+								zend_string_release(Z_STR(tmp_inc_filename));
+							}
+							return op_array;
+						} else {
+							zend_file_handle_dtor(&file_handle);
+already_compiled:
+							new_op_array = ZEND_FAKE_OP_ARRAY;
+						}
+					} else {
+						if (type == ZEND_INCLUDE_ONCE) {
+							zend_message_dispatcher(ZMSG_FAILED_INCLUDE_FOPEN, Z_STRVAL_P(inc_filename));
+						} else {
+							zend_message_dispatcher(ZMSG_FAILED_REQUIRE_FOPEN, Z_STRVAL_P(inc_filename));
+						}
+					}
+					zend_string_release(resolved_path);
+				}
+				break;
+			case ZEND_INCLUDE:
+			case ZEND_REQUIRE:
+				new_op_array = compile_filename(type, inc_filename);  //关键调用
 				break;
 	...
 	return new_op_array;
 }
 ```
- - 我们可以看到，这里又调用了一个新的函数compile_filename()，它返回一个新的op_array。因为include是包含另一个外部文件，而op_array是一个脚本的指令集，所以需要新创建一个op_array，存储另外一个文件的指令集，我们继续跟进compile_filename()：
+ - 在ZEND_INCLUDE_ONCE分支中可以观察到，如果是include_once或者require_once的case，会先去缓存中查找，那么这个缓存是怎么实现的呢？最容易想到的就是**哈希表**，key为文件名，value为文件内容，这样就可以直接从缓存中读取文件，不用再次加载文件了，提高效率。
+ - 我们回到主题include语句，在ZEND_INCLUDE分支中我们可以看到，这里又调用了一个新的函数compile_filename()，它返回一个新的op_array。因为include是包含另一个外部文件，而op_array是一个脚本的指令集，所以需要新创建一个op_array，存储另外一个文件的指令集，我们继续跟进compile_filename()：
 ```c
 zend_op_array *compile_filename(int type, zval *filename)
 {
@@ -108,5 +156,8 @@ ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type)
 	return op_array;
 }
 ```
- - 我们可以看到，它最终调用了zend_compile函数。我们是不是对它很熟悉呢？没错，它就是PHP脚本编译的入口。随后，通过调用这个函数，就可以对引入的外部脚本1.php进行词法分析和语法分析了。
+ - 我们可以看到，它最终调用了zend_compile函数。我们是不是对它很熟悉呢？没错，它就是PHP脚本编译的入口。随后，通过调用这个函数，就可以对引入的外部脚本1.php进行词法分析和语法分析等编译操作了。
  - 现在思考一个问题，这个函数返回一个op_array，是引入的新的外部脚本1.php的op_array，那么原来的旧脚本2.php的op_array的状态和数据应该如何存储呢？
+ - 答案是继续往zend_execute_data栈中添加。当include脚本执行完成之后，出栈即可。同递归的原理一样，递归也是借助栈，当你不断递归的时候，数据不断入栈，到最后的递归终止条件的时候，逐步出栈即可，所以递归是非常慢的，效率极低。
+## 其他
+ - 我们之前讲过，PHP脚本的执行入口为main函数（我们代码层面无法看到，是虚拟机帮助我们加的）
