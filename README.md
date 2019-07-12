@@ -17,3 +17,5 @@
  - 【PHP源码学习】[2019-04-01 PHP垃圾回收1](https://segmentfault.com/a/1190000019400319)
  - 【PHP源码学习】[2019-04-02 PHP垃圾回收2](https://segmentfault.com/a/1190000019650733)
  - 【PHP源码学习】[2019-04-03 PHP类与对象](https://segmentfault.com/a/1190000019674293)
+ - 【PHP源码学习】[2019-04-04 PHP中while的实现](https://segmentfault.com/a/1190000019733425)
+ - 【PHP源码学习】[2019-04-08 PHP中include的实现](https://segmentfault.com/a/1190000019741858)
