@@ -28,7 +28,7 @@ do{
 ## include语句的实现
  - 我们在面试中经常会被问到如下知识点:
      - include和require有什么区别？
-     - include和include_once有什么区别（require同理）
+     - include和include_once有什么区别（require和require_once)同理）
  - 以上两道题的答案相信大家都知道，第一个问题如果文件不存在，include会情况下会发出警告而require会报fatal error并终止脚本运行；而第二个问题中的include_once带有缓存，如果之前加载过这个文件直接调用缓存中的文件，不会去二次加载文件，include_once的性能更好。
  - 我们首先看一个例子：
  - 1.php：
@@ -160,4 +160,23 @@ ZEND_API zend_op_array *compile_file(zend_file_handle *file_handle, int type)
  - 现在思考一个问题，这个函数返回一个op_array，是引入的新的外部脚本1.php的op_array，那么原来的旧脚本2.php的op_array的状态和数据应该如何存储呢？
  - 答案是继续往zend_execute_data栈中添加。当include脚本执行完成之后，出栈即可。同递归的原理一样，递归也是借助栈，当你不断递归的时候，数据不断入栈，到最后的递归终止条件的时候，逐步出栈即可，所以递归是非常慢的，效率极低。
 ## 其他
- - 我们之前讲过，PHP脚本的执行入口为main函数（我们代码层面无法看到，是虚拟机帮助我们加的）
+### PHP脚本的执行流程
+ - 我们之前讲过，PHP脚本的执行入口为main函数（我们代码层面无法看到，是虚拟机帮助我们加的）。从main函数进去之后，PHP脚本的执行总共有5大阶段：
+ - CLI模式（command line interface，即命令行模式。如在命令行下执行脚本：php 1.php）：
+
+>  - php_module_startup：模块初始化
+>  - php_request_startup：请求初始化
+>  - php_execute_script：执行脚本
+>  - php_request_shutdown：请求关闭
+>  - php_module_shutdown：模块关闭
+
+ - CLI模式下，运行一次就会直接退出，并不常驻内存，接下来看一下我们使用的最多的FPM模式，它常驻内存。一次请求到来，PHP-FPM就要对其进行处理，所以在 php_request_startup、php_execute_script、php_request_shutdown三个阶段会进行死循环，让PHP-FPM常驻内存，才能不断地处理一个个到来的请求。但是这样会有一个问题，每一个请求到来的时候，都会重新进行词法解析、语法解析......效率是非常低的。为了解决这个问题，PHP中我们常说的opcache就要粉墨登场了。
+ - opcache：把之前解析过的opcode缓存起来
+### 初探nginx+php-fpm架构
+ - 在LNMP架构下，前端的请求发来，先会通过nginx做代理，然后通过fastcgi协议，转发给上游的php-fpm，由php-fpm真正地处理请求。
+ - 我们知道，nginx是多进程架构的反向代理web服务器，由一个master进程和多个worker进程组成：
+ - **master进程**：管理所有worker进程（如worker进程的创建、销毁）
+ - **worker进程**：负责处理客户端发来的请求
+ - 当杀死master进程的时候，worker进程依然存在，可以为客户端提供服务
+ - 当杀死worker进程的时候（且当前没有其他worker进程），master进程就会再创建worker进程，保证nginx服务正常运行
+ - 下一篇文章我们就即将讲解fastcgi协议，逐步揭开nginx+php-fpm架构通信的神秘面纱
