@@ -20,3 +20,4 @@
  - 【PHP源码学习】[2019-04-04 PHP中while的实现](https://segmentfault.com/a/1190000019733425)
  - 【PHP源码学习】[2019-04-08 PHP中include的实现](https://segmentfault.com/a/1190000019741858)
  - 【PHP源码学习】[2019-04-09 FastCGI协议1](https://segmentfault.com/a/1190000019767015)
+ - 【PHP源码学习】[2019-04-10 FastCGI协议2](https://segmentfault.com/a/1190000019790087)
