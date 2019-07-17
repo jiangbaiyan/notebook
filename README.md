@@ -1,4 +1,5 @@
-# 目录索引
+ - 此文用于汇总跟随陈雷老师及其团队的视频，学习源码过程中的思考、整理与心得体会，此文会不断更新
+ - 视频传送门：[【每日学习记录】使用录像设备记录每天的学习](https://segmentfault.com/a/1190000018488313)
 ## PHP源码学习
  - 【PHP源码学习】[2019-03-07 PHP内存管理1笔记](https://segmentfault.com/a/1190000018909215)
  - 【PHP源码学习】[2019-03-08 PHP内存管理2笔记](https://segmentfault.com/a/1190000018914652)
@@ -8,7 +9,7 @@
  - 【PHP源码学习】[2019-03-18 复习前面的内容](https://segmentfault.com/a/1190000018964023)
  - 【PHP源码学习】[2019-03-19 PHP引用](https://segmentfault.com/a/1190000018985015)
  - 【PHP源码学习】[2019-03-20 PHP词法分析](https://segmentfault.com/a/1190000019010564)
- - 【PHP源码学习】[2019-03-21 PHP AST](https://segmentfault.com/a/1190000019097615)
+ - 【PHP源码学习】[2019-03-21 AST](https://segmentfault.com/a/1190000019097615)
  - 【PHP源码学习】[2019-03-22 AST的遍历](https://segmentfault.com/a/1190000019206619)
  - 【PHP源码学习】[抽象语法树编译过程的验证](https://segmentfault.com/a/1190000019213189)
  - 【PHP源码学习】[2019-03-26 宏定义笔记](https://segmentfault.com/a/1190000019234185)
