@@ -23,3 +23,5 @@
  - 【PHP7源码学习】[2019-04-09 FastCGI协议1](https://segmentfault.com/a/1190000019767015)
  - 【PHP7源码学习】[2019-04-10 FastCGI协议2](https://segmentfault.com/a/1190000019790087)
  - 【PHP7源码学习】[2019-04-12 C语言函数调用的压栈](https://segmentfault.com/a/1190000019816238)
+## Redis5源码学习
+ - 【Redis5源码学习】[2019-04-15 简单动态字符串SDS](https://segmentfault.com/a/1190000019875197)
