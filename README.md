@@ -29,4 +29,5 @@
  - 【Redis5源码学习】[2019-04-16 跳跃表skiplist]( https://segmentfault.com/a/1190000019907987)
  - 【Redis5源码学习】[2019-04-17 压缩列表ziplist](https://segmentfault.com/a/1190000019908648)
  - 【Redis5源码学习】[2019-04-18 整数集合intset](https://segmentfault.com/a/1190000019939452)
+ - 【Redis5源码学习】[2019-04-19 字典dict](https://segmentfault.com/a/1190000019967687)
 
