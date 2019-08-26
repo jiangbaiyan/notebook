@@ -188,7 +188,7 @@ socket_close($listenSocket);
 
 为了解决第一个套接字描述符数量限制的问题，聪明的开发者们想出了poll这个新套接字描述符管理员，用以替换select这个老管理员，select()就可以安心退休啦。
 #### poll
-poll解决了select带来的描述符数量限制的问题。由于PHP的socket扩展没有poll对应的实现，所以这里放一个Unix的C语言原型实现：
+**poll解决了select带来的描述符数量限制的问题**。由于PHP的socket扩展没有poll对应的实现，所以这里放一个Unix的C语言原型实现：
 ```c
 int poll (struct pollfd *fds, unsigned int nfds, int timeout);
 ```
