@@ -187,7 +187,7 @@ socket_close($listenSocket);
 >  - select返回的时候，并不知道具体是哪个套接字描述符已经就绪，所以需要遍历所有套接字来判断哪个已经就绪，可以继续进行读写
 
 为了解决第一个套接字描述符数量限制的问题，聪明的开发者们想出了poll这个新套接字描述符管理员，用以替换select这个老管理员，select()就可以安心退休啦。
-### poll
+#### poll
 poll解决了select带来的描述符数量限制的问题。由于PHP的socket扩展没有poll对应的实现，所以这里放一个Unix的C语言原型实现：
 ```c
 int poll (struct pollfd *fds, unsigned int nfds, int timeout);
@@ -195,4 +195,4 @@ int poll (struct pollfd *fds, unsigned int nfds, int timeout);
 poll的fds参数集合了select的read、write和exception套接字数组，合三为一。poll中的fds没有了1024个的数量限制。当有些描述符状态发生变化并就绪之后，poll同select一样会返回。但是遗憾的是，我们同样不知道具体是哪个或哪些套接字已经就绪，我们仍需要遍历套接字集合去判断究竟是哪个套接字已经就绪，这一点并没有解决刚才提到select的第二个问题。
 我们可以总结一下，select和poll这两种实现，都需要在返回后，通过遍历所有的套接字描述符来获取已经就绪的套接字描述符。事实上，同时连接的大量客户端在一时刻可能只有很少的处于就绪状态，因此随着监视的描述符数量的增长，其效率也会线性下降。
 为了解决不知道返回之后究竟是哪个或哪些描述符已经就绪的问题，同时避免遍历所有的套接字描述符，聪明的开发者们又发明出了epoll机制，完美解决了select和poll所存在的问题。
-### epoll
+#### epoll
