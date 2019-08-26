@@ -196,3 +196,57 @@ poll的fds参数集合了select的read、write和exception套接字数组，合�
 我们可以总结一下，select和poll这两种实现，都需要在返回后，通过遍历所有的套接字描述符来获取已经就绪的套接字描述符。事实上，同时连接的大量客户端在一时刻可能只有很少的处于就绪状态，因此随着监视的描述符数量的增长，其效率也会线性下降。
 为了解决不知道返回之后究竟是哪个或哪些描述符已经就绪的问题，同时避免遍历所有的套接字描述符，聪明的开发者们又发明出了epoll机制，完美解决了select和poll所存在的问题。
 #### epoll
+epoll将一个阻塞的poll系统调用拆分成了三个步骤：
+```c
+int epoll_create(int size);
+int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)；
+int epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout);
+```
+ - epoll_create()：创建一个epoll实例。后续操作会使用这个实例。
+ - epoll_ctl()：对某套接字描述符进行增删改操作，并告诉内核需要监听套接字描述符的什么事件
+ - epoll_wait()：等待监听列表中的**连接事件**（监听套接字描述符才会发生）或**读写事件**（连接套接字描述符才会发生）
+
+看起来，这三个函数就是select、poll拆分出来了嘛。我们对某套接字描述符的添加、删除、修改操作由之前的代码实现变成了调用epoll_ctl()来实现。epoll_ctl()的参数含义如下：
+- epfd：epoll_create()的返回值
+- op：表示对下面套接字描述符fd所进行的操作。EPOLL_CTL_ADD：将描述符添加到监听列表；EPOLL_CTL_DEL：不再监听某描述符；EPOLL_CTL_MOD：修改某描述符
+- fd：上面op操作的套接字描述符对象（之前在PHP中是$listenSocket与$connSocket两种套接字描述符）例如将某个套接字**添加**到监听列表中
+- event：告诉内核需要监听该套接字描述符的什么事件（如读写、连接等）、
+最后我们调用epoll_wait()等待连接或读写等事件，在某个套接字描述符上准备就绪。当有事件准备就绪之后，会存到epoll_event结构体中，我们通过访问这个结构体就可以得到所有已经准备好事件的套接字描述符。这里就不用再像之前select和poll那样，遍历所有的套接字描述符之后才能知道究竟是哪个描述符已经准备就绪了，这样减少了一次O(n)的遍历，大大提高了效率。
+在最后返回的所有套接字描述符中，同样存在之前说过的两种描述符：监听套接字描述符和连接套接字描述符。那么我们需要遍历所有事件准备就绪的描述符，去判断是哪种描述符，然后视情况做做出accept（监听套接字）或者是read（连接套接字）的后续处理。一个使用C语言编写的epoll服务器的伪代码如下：
+```c
+int main(int argc, char *argv[]) {
+    listenSocket = socket(AF_INET, SOCK_STREAM, 0); //创建一个监听套接字
+    bind(listenSocket)  //绑定地址与端口
+    listen(listenSocket) //转换为被动套接字
+    epfd = epoll_create(EPOLL_SIZE); //创建一个epoll实例
+    ep_events = (epoll_event*)malloc(sizeof(epoll_event) * EPOLL_SIZE); //创建一个epoll_event结构存储套接字集合
+    event.events = EPOLLIN;
+    event.data.fd = listenSocket;
+    epoll_ctl(epfd, EPOLL_CTL_ADD, listenSocket, &event); //将监听套接字加入到监听列表中
+    while (1) {
+        event_cnt = epoll_wait(epfd, ep_events, EPOLL_SIZE, -1); //等待返回已经就绪的套接字描述符们
+        for (int i = 0; i < event_cnt; ++i) { //遍历所有就绪的套接字描述符
+            if (ep_events[i].data.fd == listenSocket) { //如果是监听套接字描述符就绪了，说明有一个新客户端连接到来
+                connSocket = accept(listenSocket); //调用accept()建立连接
+                event.events = EPOLLIN;
+                event.data.fd = connSocket;
+                epoll_ctl(epfd, EPOLL_CTL_ADD, connSocket, &event); //添加对新建立的连接套接字描述符的监听，以监听后续在连接描述符上的读写事件
+            } else { //如果是连接套接字描述符事件就绪，则可以进行读写
+                str_len = read(ep_events[i].data.fd, buf, BUF_SIZE);
+                if (str_len == 0) { //无法从连接描述符中读取到数据
+                    epoll_ctl(epfd, EPOLL_CTL_DEL, ep_events[i].data.fd, NULL); //删除对这个描述符的监听
+                    close(ep_events[i].data.fd);
+                } else {
+                    write(ep_events[i].data.fd, buf, str_len);
+                }
+            }
+        }
+    }
+    close(listenSocket);
+    close(epfd);
+    return 0;
+}
+```
+我们看代码的结构，除了由一个函数拆分成三个函数，其余的执行流程基本同select、poll相似。只是epoll会只返回已经就绪的套接字描述符集合，而不是所有描述符的集合，大大提升了效率。此外，它监听的套接字描述符是没有限制的，这样，之前select、poll的遗留问题就全部解决啦。关于epoll的两种工作工作模式有LT（水平触发）和ET（边缘触发）并不是我们此次的重点，有兴趣的同学可以搜索其他博客进行学习。
+## 总结
+我们从最基本网络编程说起，开始从一个最简单的同步阻塞服务器到一个IO多路复用服务器，我们从头到尾了解到了一个服务器性能提升的思考与实现过程。而提升服务器的并发性能的方式远不止这几种，还包括协程等新的概念需要我们去对比与分析，大家加油。
