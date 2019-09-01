@@ -2,7 +2,7 @@
  - 视频传送门：[【每日学习记录】使用录像设备记录每天的学习](https://segmentfault.com/a/1190000018488313)
 ## 技术干货
  - [浅析服务器并发IO性能提升之路—从网络编程基础到epoll](https://segmentfault.com/a/1190000020194471)
- - [浅析redis中的IO多路复用机制](https://segmentfault.com/a/1190000020252203)
+ - [浅析redis中的IO多路复用与事件机制](https://segmentfault.com/a/1190000020252203)
  - [初识Kafka](https://segmentfault.com/a/1190000020087243)
 ## PHP7源码学习
  - 【PHP7源码学习】[剖析PHP7数组的有序性](https://segmentfault.com/a/1190000019964143)
