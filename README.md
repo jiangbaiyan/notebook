@@ -1,5 +1,9 @@
  - 此文用于汇总跟随陈雷老师及团队的视频，学习源码过程中的思考、整理与心得体会，此文会不断更新
  - 视频传送门：[【每日学习记录】使用录像设备记录每天的学习](https://segmentfault.com/a/1190000018488313)
+## 技术干货
+ - [浅析服务器并发IO性能提升之路—从网络编程基础到epoll](https://segmentfault.com/a/1190000020194471)
+ - [浅析redis中的IO多路复用机制](https://segmentfault.com/a/1190000020252203)
+ - [初识Kafka](https://segmentfault.com/a/1190000020087243)
 ## PHP7源码学习
  - 【PHP7源码学习】[剖析PHP7数组的有序性](https://segmentfault.com/a/1190000019964143)
  - 【PHP7源码学习】[2019-03-07 PHP内存管理1笔记](https://segmentfault.com/a/1190000018909215)
@@ -24,6 +28,7 @@
  - 【PHP7源码学习】[2019-04-09 FastCGI协议1](https://segmentfault.com/a/1190000019767015)
  - 【PHP7源码学习】[2019-04-10 FastCGI协议2](https://segmentfault.com/a/1190000019790087)
  - 【PHP7源码学习】[2019-04-12 C语言函数调用的压栈](https://segmentfault.com/a/1190000019816238)
+ - 【PHP7源码学习】[2019-04-25 PHP生命周期浅析](https://segmentfault.com/a/1190000020030115)
 ## Redis5源码学习
  - 【Redis5源码学习】[2019-04-15 简单动态字符串SDS](https://segmentfault.com/a/1190000019875197)
  - 【Redis5源码学习】[2019-04-16 跳跃表skiplist]( https://segmentfault.com/a/1190000019907987)
