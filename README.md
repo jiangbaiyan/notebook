@@ -4,6 +4,9 @@
  - [浅析服务器并发IO性能提升之路—从网络编程基础到epoll](https://segmentfault.com/a/1190000020194471)
  - [浅析redis中的IO多路复用与事件机制](https://segmentfault.com/a/1190000020252203)
  - [初识Kafka](https://segmentfault.com/a/1190000020087243)
+ - [http1.1&2.0的基本原理](https://segmentfault.com/a/1190000020252678)
+ - [浅析redis命令执行的生命周期](https://segmentfault.com/a/1190000020386517)
+ - [关于MySQL order by limit 走错索引的探讨](https://segmentfault.com/a/1190000020399424)
 ## PHP7源码学习
  - 【PHP7源码学习】[剖析PHP7数组的有序性](https://segmentfault.com/a/1190000019964143)
  - 【PHP7源码学习】[2019-03-07 PHP内存管理1笔记](https://segmentfault.com/a/1190000018909215)
