@@ -124,3 +124,4 @@ typedef struct redisDb {
     ...
 } redisDb;
 ```
+接续往下走，删除成功后，deleted变量值为1，会执行下面的if：
