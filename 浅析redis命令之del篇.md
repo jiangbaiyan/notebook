@@ -114,7 +114,7 @@ int dbSyncDelete(redisDb *db, robj *key) {
     }
 }
 ```
-在redis中，过期时间和数据是分别存在redis数据库下面的两个字典中的，所以要去字典中分别删除过期时间以及数据的值。具体的删除逻辑我们先不深入去了解：
+在redis中，过期时间和数据是分别存在redis数据库下面的两个字典中的，所以要去字典中分别删除过期时间以及数据的值。具体的删除逻辑我们先不深入去了解，只知道过期时间和key-value对是存在字典dict中就好：
 ```c
 
 typedef struct redisDb {
