@@ -7,6 +7,15 @@
  - [http1.1&2.0的基本原理](https://segmentfault.com/a/1190000020252678)
  - [浅析redis命令执行的生命周期](https://segmentfault.com/a/1190000020386517)
  - [关于MySQL order by limit 走错索引的探讨](https://segmentfault.com/a/1190000020399424)
+ - ## Redis5源码学习
+ - 【Redis5源码学习】[简单动态字符串SDS](https://segmentfault.com/a/1190000019875197)
+ - 【Redis5源码学习】[跳跃表skiplist]( https://segmentfault.com/a/1190000019907987)
+ - 【Redis5源码学习】[压缩列表ziplist](https://segmentfault.com/a/1190000019908648)
+ - 【Redis5源码学习】[整数集合intset](https://segmentfault.com/a/1190000019939452)
+ - 【Redis5源码学习】[字典dict](https://segmentfault.com/a/1190000019967687)
+ - 【Redis5源码学习】[浅析redis命令之del篇](https://segmentfault.com/a/1190000020438191)
+ - 【Redis5源码学习】[浅析redis命令之dump篇](https://segmentfault.com/a/1190000020441163)
+ - 【Redis5源码学习】[浅析redis命令之exists篇](https://segmentfault.com/a/1190000020451197)
 ## PHP7源码学习
  - 【PHP7源码学习】[剖析PHP7数组的有序性](https://segmentfault.com/a/1190000019964143)
  - 【PHP7源码学习】[2019-03-07 PHP内存管理1笔记](https://segmentfault.com/a/1190000018909215)
@@ -32,10 +41,3 @@
  - 【PHP7源码学习】[2019-04-10 FastCGI协议2](https://segmentfault.com/a/1190000019790087)
  - 【PHP7源码学习】[2019-04-12 C语言函数调用的压栈](https://segmentfault.com/a/1190000019816238)
  - 【PHP7源码学习】[2019-04-25 PHP生命周期浅析](https://segmentfault.com/a/1190000020030115)
-## Redis5源码学习
- - 【Redis5源码学习】[2019-04-15 简单动态字符串SDS](https://segmentfault.com/a/1190000019875197)
- - 【Redis5源码学习】[2019-04-16 跳跃表skiplist]( https://segmentfault.com/a/1190000019907987)
- - 【Redis5源码学习】[2019-04-17 压缩列表ziplist](https://segmentfault.com/a/1190000019908648)
- - 【Redis5源码学习】[2019-04-18 整数集合intset](https://segmentfault.com/a/1190000019939452)
- - 【Redis5源码学习】[2019-04-19 字典dict](https://segmentfault.com/a/1190000019967687)
-
