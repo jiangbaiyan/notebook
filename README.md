@@ -7,7 +7,7 @@
  - [http1.1&2.0的基本原理](https://segmentfault.com/a/1190000020252678)
  - [浅析redis命令执行的生命周期](https://segmentfault.com/a/1190000020386517)
  - [关于MySQL order by limit 走错索引的探讨](https://segmentfault.com/a/1190000020399424)
- - ## Redis5源码学习
+## Redis5源码学习
  - 【Redis5源码学习】[简单动态字符串SDS](https://segmentfault.com/a/1190000019875197)
  - 【Redis5源码学习】[跳跃表skiplist]( https://segmentfault.com/a/1190000019907987)
  - 【Redis5源码学习】[压缩列表ziplist](https://segmentfault.com/a/1190000019908648)
