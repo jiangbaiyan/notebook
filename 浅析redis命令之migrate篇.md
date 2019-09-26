@@ -8,7 +8,7 @@ MIGRATE host port key|"" destination-db timeout [COPY] [REPLACE] [KEYS key [key 
 ```
 使用实战：将键key1迁移到本机6380端口的redis实例上，存储到目标实例的第0号数据库，超时时间为1000毫秒。可选项COPY如果表示不移除源实例上的 key ，REPLACE表示替换目标实例上已存在的 key 。keys表示可以同时传送多个keys（前面的key参数的位置必须设置为空）
 ```c
-127.0.0.1:6379> migrate 127.0.0.1 6380 key1 0 1000
+127.0.0.1:6379> migrate 127.0.0.1 6379 "" 0 5000 KEYS key1 key2 key3
 OK
 ```
 返回值：迁移成功时返回 OK ，否则返回错误
@@ -89,4 +89,22 @@ OK
         addReplySds(c,sdsnew("+NOKEY\r\n"));
         return;
     }
+```
+刚开始执行migrate命令的时候，由于migrate参数很多，需要对其逐个做校验。尤其是在启用keys参数同时迁移多个keys的时候，需要进行参数的动态判断。同时需要判断是否有合法的键来进行迁移。只有没有过期的键才能够迁移，否则不进行迁，最大化节省系统资源。
+### 连接建立
+假如我们要从当前6379端口上的redis实例迁移到6380端口上的redis实例，我们必然要建立一个socket连接：
+```c
+try_again:
+    write_error = 0;
+
+    /* 连接建立 */
+    cs = migrateGetSocket(c,c->argv[1],c->argv[2],timeout);
+    if (cs == NULL) {
+        zfree(ov); zfree(kv);
+        return; 
+    }
+```
+我们看到，在主流程中调用了migrateGetSocket()函数创建了一个socket，这里是一个带缓存的socket。我们暂时不跟进这个函数，后面我会以扩展的形式来跟进。
+```c
+基于这个socket，我们可以将数据以TCP协议中规定的字节流形式传输到目标实例上。这就需要一个序列化的过程了。6379实例需要将keys序列化，6380需要将数据反序列化。这就需要借助我们之前讲过的DUMP命令和RESTORE命令，分别来进行序列化和反序列化了。
 ```
