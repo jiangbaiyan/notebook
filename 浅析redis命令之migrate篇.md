@@ -6,7 +6,7 @@ baiyan
 ```c
 MIGRATE host port key|"" destination-db timeout [COPY] [REPLACE] [KEYS key [key ...]]
 ```
-使用实战：将键key1迁移到本机6380端口的redis实例上，存储到目标实例的第0号数据库，超时时间为1000毫秒。可选项COPY如果表示不移除源实例上的 key ，REPLACE表示替换目标实例上已存在的 key 。keys表示可以同时传送多个keys（前面的key参数的位置必须设置为空）
+命令实战：将键key1迁移到本机6380端口的redis实例上，存储到目标实例的第0号数据库，超时时间为1000毫秒。可选项COPY如果表示不移除源实例上的 key ，REPLACE表示替换目标实例上已存在的 key 。keys表示可以同时传送多个keys（前面的key参数的位置必须设置为空）
 ```c
 127.0.0.1:6379> migrate 127.0.0.1 6379 "" 0 5000 KEYS key1 key2 key3
 OK
@@ -105,6 +105,45 @@ try_again:
     }
 ```
 我们看到，在主流程中调用了migrateGetSocket()函数创建了一个socket，这里是一个带缓存的socket。我们暂时不跟进这个函数，后面我会以扩展的形式来跟进。
-```c
+### 组装命令
 基于这个socket，我们可以将数据以TCP协议中规定的字节流形式传输到目标实例上。这就需要一个序列化的过程了。6379实例需要将keys序列化，6380需要将数据反序列化。这就需要借助我们之前讲过的DUMP命令和RESTORE命令，分别来进行序列化和反序列化了。
+redis并没有立即进行DUMP将key序列化，而是首先组装要在目标redis实例上所要执行的命令，比如AUTH/SELECT/RESTORE等命令。要想在目标实例上执行命令，那么必须同样基于之前建立的socket连接，以当前的redis实例作为客户端，往与目标redis实例建立的TCP连接中，写入按照redis协议封装的命令集合（如\*2 \r\n SELECT \r\n $1 \r\n 1 \r\n）。redis使用了自己封装的I/O抽象层rio，通过它就可以往我们在建立socket的时候生成的fd中写入数据啦。首先redis建立一个rio缓冲区，并按照redis协议来组装要在目标实例上执行的redis命令：
+```c
+    // 初始化一个rio缓冲区
+    rioInitWithBuffer(&cmd,sdsempty());
+
+    /* 组装AUTH命令 */
+    if (password) {
+        serverAssertWithInfo(c,NULL,rioWriteBulkCount(&cmd,'*',2)); // 按照redis协议写入一条命令开始的标识\*2。表示命令一共有2个参数
+        serverAssertWithInfo(c,NULL,rioWriteBulkString(&cmd,"AUTH",4)); // 写入$4\r\n  AUTH \r\n
+        serverAssertWithInfo(c,NULL,rioWriteBulkString(&cmd,password, sdslen(password))); // 同上，按照协议格式写入密码
+    }
+
+    /* 在目标实例上选择数据库 */
+    int select = cs->last_dbid != dbid; /* 判断是否已经选择过数据库，如果选择过就不用再次执行SELECT命令 */
+    if (select) { // 如果没有选择过，需要执行SELECT命令选择数据库
+        serverAssertWithInfo(c,NULL,rioWriteBulkCount(&cmd,'*',2)); // 同上，写入开始表示\*2
+        serverAssertWithInfo(c,NULL,rioWriteBulkString(&cmd,"SELECT",6)); // 同上，写入$6\r\n SELECT \r\n
+        serverAssertWithInfo(c,NULL,rioWriteBulkLongLong(&cmd,dbid)); // 写入$1\r\n 1 \r\n
+    }
+```
+那么接下来需要进行DUMP的序列化操作了。由于序列化操作耗时较久，所以可能出现这种情况：在之前第一次检测是否超时的时候没有超时，但是由于这次序列化操作时间较久，执行期间，这个键超时了，那么redis简单粗暴地丢弃该超时键，直接放弃迁移这个键：
+```c
+    int non_expired = 0; // 暂存新的未过期的键的数量
+
+    /* 如果在DUMP的过程中过期了，直接continue. */
+    for (j = 0; j < num_keys; j++) {
+        long long ttl = 0;
+        long long expireat = getExpire(c->db,kv[j]);
+
+        if (expireat != -1) {
+            ttl = expireat-mstime();
+            if (ttl < 0) {
+                continue;
+            }
+            if (ttl < 1) ttl = 1;
+        }
+
+        /* 经过上面的筛选之后，都是最新的、没有过期的键，这些键可以最终被迁移了. */
+        kv[non_expired++] = kv[j];
 ```
