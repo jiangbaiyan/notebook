@@ -5,14 +5,14 @@ filter（也称middleware）是我们平时业务中用的非常广泛的框架�
 ```go
 // 模拟业务代码
 func hello(wr http.ResponseWriter, r *http.Request) {
-    wr.Write([]byte("hello"))
+	wr.Write([]byte("hello"))
 }
 
 func main() {
-    http.HandleFunc("/", hello)
-    if err := http.ListenAndServe(":8080", nil); err != nil {
-        panic(err)
-    }
+	http.HandleFunc("/", hello)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		panic(err)
+	}
 }
 ```
 
@@ -21,19 +21,19 @@ func main() {
 ```go
 // 模拟业务代码
 func hello(wr http.ResponseWriter, r *http.Request) {
-    // 增加计算执行时间逻辑
-    start := time.Now()
-    wr.Write([]byte("hello"))
-    timeElapsed := time.Since(start)
-    // 打印请求耗时
-    fmt.Println(timeElapsed)
+	// 增加计算执行时间逻辑
+	start := time.Now()
+	wr.Write([]byte("hello"))
+	timeElapsed := time.Since(start)
+	// 打印请求耗时
+	fmt.Println(timeElapsed)
 }
 
 func main() {
-    http.HandleFunc("/", hello)
+	http.HandleFunc("/", hello)
     if err := http.ListenAndServe(":8080", nil); err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 }
 ```
 但是这样实现仍然有一定问题。假设我们有一万个请求路径定义、所以有一万个handler和它对应，我们在这一万个handler中，如果都要加上请求执行时间的计算，那必然代价是相当大的。
@@ -75,33 +75,33 @@ func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
 ```go
 // 打印请求时间filter，和具体的业务逻辑hello解耦
 func timeFilter(f http.HandlerFunc) http.HandlerFunc {
-    return func(wr http.ResponseWriter, r *http.Request) {
-        start := time.Now()
-        // 这里就是上面我们看过HandlerFun类型中ServeHTTP的默认实现，会直接调用f()执行业务逻辑，这里就是我们的hello，最终会打印出字符串
-        f.ServeHTTP(wr, r)
-        timeElapsed := time.Since(start)
-        // 打印请求耗时
-        fmt.Println(timeElapsed)
-    }
+	return func(wr http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		// 这里就是上面我们看过HandlerFun类型中ServeHTTP的默认实现，会直接调用f()执行业务逻辑，这里就是我们的hello，最终会打印出字符串
+		f.ServeHTTP(wr, r)
+		timeElapsed := time.Since(start)
+		// 打印请求耗时
+		fmt.Println(timeElapsed)
+	}
 }
 
 func hello(wr http.ResponseWriter, r *http.Request) {
-    wr.Write([]byte("hello\n"))
+	wr.Write([]byte("hello\n"))
 }
 
 func main() {
-    // 在hello的外面包上一层timeFilter
-    http.HandleFunc("/", timeFilter(hello))
-    if err := http.ListenAndServe(":8080", nil); err != nil {
-        panic(err)
-    }
+	// 在hello的外面包上一层timeFilter
+	http.HandleFunc("/", timeFilter(hello))
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		panic(err)
+	}
 }
 ```
 然而这样还是有两个问题：
  - 如果有十万个路由，那我要在这十万个路由上，每个都去加上相同的包裹代码吗？
  - 如果有十万个filter，那我们要包裹十万层吗，代码可读性会非常差
 
-目前的实现很可能造成以下后果：
+如：
 ```go
 http.HandleFunc("/123", filter3(filter2(filter1(hello))))
 http.HandleFunc("/456", filter3(filter2(filter1(hello))))
@@ -118,43 +118,43 @@ http.HandleFunc("/135", filter3(filter2(filter1(hello))))
 type Filter func(f http.HandlerFunc) http.HandlerFunc
 
 type Frame struct {
-    // 存储所有注册的过滤器
-    filters []Filter
+	// 存储所有注册的过滤器
+	filters []Filter
 }
 
 // AddFilter 注册filter
 func  (r *Frame) AddFilter(filter Filter) {
-    r.filters = append(r.filters, filter)
+	r.filters = append(r.filters, filter)
 }
 
 // AddRoute 注册路由，并把handler按filter添加顺序包起来。这里采用了递归实现比较好理解，后面会讲迭代实现
 func (r *Frame) AddRoute(pattern string, f http.HandlerFunc) {
-    r.process(pattern, f, len(r.filters) - 1)
+	r.process(pattern, f, len(r.filters) - 1)
 }
 
 func (r *Frame) process(pattern string, f http.HandlerFunc, index int) {
-    if index == -1 {
-        http.HandleFunc(pattern, f)
-        return
-    }
-    fWrap := r.filters[index](f)
-    index--
-    r.process(pattern, fWrap, index)
+	if index == -1 {
+		http.HandleFunc(pattern, f)
+		return
+	}
+	fWrap := r.filters[index](f)
+	index--
+	r.process(pattern, fWrap, index)
 }
 
 // Start 框架启动
 func (r *Frame) Start() {
-    if err := http.ListenAndServe(":8080", nil); err != nil {
-        panic(err)
-    }
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		panic(err)
+	}
 }
 
 func main() {
-    r := &Frame{}
-    r.AddFilter(timeFilter)
-    r.AddFilter(logFilter)
-    r.AddRoute("/", hello)
-    r.Start()
+	r := &Frame{}
+	r.AddFilter(timeFilter)
+	r.AddFilter(logFilter)
+	r.AddRoute("/", hello)
+	r.Start()
 }
 ```
 r.AddRoute之前都很好理解，初始化主结构，并把我们定义好的filter放到主结构中的切片统一管理。接下来AddRoute这里是核心逻辑，接下来我们详细讲解一下
@@ -176,18 +176,19 @@ r.process("/", hello, 0)
 ```
 这里就轮到r.filters[0]了，即timeFilter，过程同上：
 ![](https://baiyan-1300428464.cos.ap-beijing.myqcloud.com/article/2021/9/26/1632588193825.png)
+
 最后一轮递归，index = -1，即所有filter都处理完了，我们就可以最终和v1.0一样，调用http.HandleFunc(pattern, f)将最终我们层层包裹后的f，最终注册上去，整个流程结束：
 ![](https://baiyan-1300428464.cos.ap-beijing.myqcloud.com/article/2021/9/26/1632588286464.png)
 
-AddRoute的递归版本相对容易理解，我也同样用迭代实现了一个版本。每次循环会在本层filter将f包裹后重新赋值给f，这样就可以将之前包裹后的f沿用到下一轮迭代，基于上一轮的f继续包裹剩余的filter。在gin框架中就用了迭代这种方式来实现：
+AddRoute的递归版本相对容易理解，这里我也同样用迭代实现了一个版本，比较有代表性的框架就是gin、beego等都是通过迭代来实现的。迭代版本中，每次循环会在本层filter将f包裹后重新赋值给f，这样就可以将之前包裹后的f沿用到下一轮迭代，基于上一轮的f继续包裹剩余的filter：
 ```go
 // AddRouteIter AddRoute的迭代实现
 func (r *Frame) AddRouteIter(pattern string, f http.HandlerFunc) {
-    filtersLen := len(r.filters)
-    for i := filtersLen; i >= 0; i-- {
-        f = r.filters[i](f)
-    }
-    http.HandleFunc(pattern, f)
+	filtersLen := len(r.filters)
+	for i := filtersLen; i >= 0; i-- {
+		f = r.filters[i](f)
+	}
+	http.HandleFunc(pattern, f)
 }
 ```
 这种filter的实现也叫做洋葱模式，最里层是我们的业务逻辑helllo，然后外面是logFilter、在外面是timeFilter，很像这个洋葱，相信到这里你已经可以体会到了：
