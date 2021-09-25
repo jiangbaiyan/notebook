@@ -1,5 +1,5 @@
 ---
-title: 【深入理解Go】浅析框架中的middleware组件
+title: 【深入理解Go】浅析框架中的middleware组.md
 tags: 新建,模板,小书匠
 renderNumberedHeading: true
 grammar_cjkRuby: true
